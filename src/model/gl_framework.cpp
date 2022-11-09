@@ -5,7 +5,7 @@ extern GLfloat c_xrot,c_yrot,c_zrot, x_trans, y_trans, z_trans, scale_factor;
 extern int c;
 extern bool enable_perspective;
 extern const int n;
-extern csX75::HNode* root_node,*curr_node,*curr_pair,*engine,*handle,*axisrodf,*axisrodb;
+extern csX75::HNode* root_node,*curr_node,*curr_pair,*engine,*handle,*axisrodf,*axisrodb,*torsou;
 namespace csX75
 {
   //! Initialize GL State
@@ -42,9 +42,11 @@ namespace csX75
       glfwSetWindowShouldClose(window, GL_TRUE);
 
     else if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS||action==GLFW_REPEAT))
-      handle->dec_ry();
+      {handle->dec_ry();
+      torsou->dec_ry();}
     else if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS||action==GLFW_REPEAT))
-      handle->inc_ry();
+      {handle->inc_ry();
+      torsou->inc_ry();}
     else if (key == GLFW_KEY_UP && (action == GLFW_PRESS||action==GLFW_REPEAT))
       {axisrodb->inc_rz();
       axisrodf->dec_rz();

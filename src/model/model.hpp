@@ -26,16 +26,16 @@ GLfloat c_xpos = 0.0, c_ypos = 0.0, c_zpos = 2.0;
 GLfloat cc_xpos = -1.0, cc_ypos = 0.0, cc_zpos = 0.0;
 GLfloat c_up_x = 0.0, c_up_y = 1.0, c_up_z = 0.0;
 GLfloat c_xrot=0.0,c_yrot=0.0,c_zrot=0.0;
-GLfloat x_trans = 0.0, y_trans = 0.0, z_trans = 0.0;
+GLfloat x_trans = 0.0, y_trans = 0.0, z_trans = 0.0, x_trans_t = 0.0,  y_trans_t = 0.0, z_trans_t = 0.0;
 GLfloat scale_factor = 0.2;
-int c =0;
+int c = 1;
 
 //Running variable to toggle culling on/off
 bool enable_culling=true;
 //Running variable to toggle wireframe/solid modelling
 bool solid=true;
 //Enable/Disable perspective view
-bool enable_perspective=false;
+bool enable_perspective=true;
 //Shader program attribs
 GLuint vPosition,vColor;
 
@@ -79,6 +79,11 @@ csX75::HNode* lleg;
 csX75::HNode* rthigh;
 csX75::HNode* rleg;
 
+csX75::HNode* root_node_t;
+csX75::HNode* track1;
+csX75::HNode* track2;
+csX75::HNode* track3;
+csX75::HNode* track4;
 
 //-------------------------------------------------------------------------
 

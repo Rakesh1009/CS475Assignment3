@@ -7,6 +7,9 @@ int SCR_HEI = 1080;
 float r = 1.3;
 float R = 2.1;
 
+float r_T = 55.0;
+float R_T = 85.0;
+
 GLuint shaderProgram;
 
 GLuint  vao, vbo;
@@ -23,10 +26,24 @@ glm::mat4 view_matrix;
 
 glm::mat4 modelview_matrix;
 GLuint uModelViewMatrix;
+
 const int num_vertices = 36;
+const int tessellation = 100;
+const int num_vertices_t = 6*tessellation;
+
 float s = 1.5;
 float s2 = 2*s;
 
+
+glm::mat4* multiply_stack(std::vector<glm::mat4> matStack){
+	glm::mat4* mult;
+	mult = new glm::mat4(1.0f);
+	
+	for(int i=0;i<matStack.size();i++){
+		*mult = (*mult) * matStack[i];
+	}	
+	return mult;
+}
 
 glm::vec4 body_p[8] = {
   glm::vec4(-1.0/s, 0.0/s, 0.7/s, 1.0),
@@ -230,8 +247,16 @@ glm::vec4 eye_p[8] = {
 
 //----------------------------------------------------------------------------//
 
+glm::vec4 track_p[6] = {
+  glm::vec4(0.0/s2, 15.0/s2, 0.0/s2, 1.0),
+  glm::vec4(0.0/s2, -15.0/s2, 0.0/s2, 1.0),
+  glm::vec4(150.0/(s2*tessellation), 15.0/s2, 0.0/s2, 1.0),
+  glm::vec4(150.0/(s2*tessellation), -15.0/s2, 0.0/s2, 1.0),
+  glm::vec4(0.0/s2, -r_T/s2, 0.0/s2, 1.0),
+  glm::vec4(0.0/s2, -R_T/s2, 0.0/s2, 1.0),
+};
 
-
+//----------------------------------------------------------------------------//
 
 //RGBA colors
 glm::vec4 colorblack[1] = {
@@ -273,11 +298,9 @@ glm::vec4 coloryellow[1] = {
 
 int tri_idx_bike=0;
 int tri_idx_human=0;
-int tri_idx2=0;
-// int tri_idx3=0;
-// int tri_idx4=0;
-// int tri_idx5=0;
-// int ind = 0;
+int tri_idx_tyre=0;
+int tri_idx_track=0;
+int tri_idx_track2=0;
 
 glm::vec4 v_positionshands[num_vertices];
 glm::vec4 v_positionstorsop[num_vertices];
@@ -299,10 +322,12 @@ glm::vec4 v_positionsaxis_rod[num_vertices];
 glm::vec4 v_positionsspoke[num_vertices];
 glm::vec4 v_positionsrod[num_vertices]; 
 
-
+glm::vec4 v_positionstrack[num_vertices_t];
+glm::vec4 v_positionstrack2[num_vertices_t];
 
 
 glm::vec4 v_colors_black[num_vertices];
+glm::vec4 v_colors_black_t[num_vertices_t];
 glm::vec4 v_colors_red[num_vertices];
 glm::vec4 v_colors_skin[num_vertices];
 glm::vec4 v_colors_blue[num_vertices];
@@ -312,7 +337,9 @@ glm::vec4 v_colors_grey[num_vertices];
 glm::vec4 v_colors_green[num_vertices];
 glm::vec4 v_colors_yellow[num_vertices];
 
+
 // quad generates two triangles for each face and assigns colors to the vertices
+
 
 void fill_color()
 {
@@ -327,6 +354,14 @@ void fill_color()
     v_colors_grey[i] = colorgrey[0];
     v_colors_green[i] = colorgreen[0];
     v_colors_yellow[i] = coloryellow[0];
+  }
+}
+
+void fill_color_t()
+{
+  for(int i=0; i<num_vertices_t; i++)
+  {
+    v_colors_black_t[i] = colorbrown[0];
   }
 }
 
@@ -465,29 +500,67 @@ void man(int a, int b, int c, int d)
 
 void tyre(int a, int b, int c, int d)
 {
-   v_positionstyre[tri_idx2] = tyre_p[a];
-   tri_idx2++;
+  v_positionstyre[tri_idx_tyre] = tyre_p[a];
+  tri_idx_tyre++;
 
-   v_positionstyre[tri_idx2] = tyre_p[b];
-   tri_idx2++;
+  v_positionstyre[tri_idx_tyre] = tyre_p[b];
+  tri_idx_tyre++;
 
-   v_positionstyre[tri_idx2] = tyre_p[c];
-   tri_idx2++;
+  v_positionstyre[tri_idx_tyre] = tyre_p[c];
+  tri_idx_tyre++;
 
-   v_positionstyre[tri_idx2] = tyre_p[a];
-   tri_idx2++;
+  v_positionstyre[tri_idx_tyre] = tyre_p[a];
+  tri_idx_tyre++;
 
-   v_positionstyre[tri_idx2] = tyre_p[c];
-   tri_idx2++;
+  v_positionstyre[tri_idx_tyre] = tyre_p[c];
+  tri_idx_tyre++;
 
-   v_positionstyre[tri_idx2] = tyre_p[d];
-   tri_idx2++;
+  v_positionstyre[tri_idx_tyre] = tyre_p[d];
+  tri_idx_tyre++;
 
 }
+
+void draw_track_f(void)
+{
+  for(int i=0;i<tessellation;i++){
+    v_positionstrack[tri_idx_track] = track_p[0]+ glm::vec4(i*150.0/(s2*tessellation), 0.0/s2, 0.0/s2, 1.0);
+    tri_idx_track++;
+    v_positionstrack[tri_idx_track] = track_p[1]+ glm::vec4(i*150.0/(s2*tessellation), 0.0/s2, 0.0/s2, 1.0);
+    tri_idx_track++;
+    v_positionstrack[tri_idx_track] = track_p[2]+ glm::vec4(i*150.0/(s2*tessellation), 0.0/s2, 0.0/s2, 1.0);
+    tri_idx_track++;
+    v_positionstrack[tri_idx_track] = track_p[1]+ glm::vec4(i*150.0/(s2*tessellation), 0.0/s2, 0.0/s2, 1.0);
+    tri_idx_track++;
+    v_positionstrack[tri_idx_track] = track_p[2]+ glm::vec4(i*150.0/(s2*tessellation), 0.0/s2, 0.0/s2, 1.0);
+    tri_idx_track++;
+    v_positionstrack[tri_idx_track] = track_p[3]+ glm::vec4(i*150.0/(s2*tessellation), 0.0/s2, 0.0/s2, 1.0);
+    tri_idx_track++;
+  }
+}
+
+void draw_track_c(void)
+{
+  for(int i=0;i<tessellation;i++){
+    v_positionstrack2[tri_idx_track2] = track_p[4]+ glm::vec4((r_T*(glm::sin(i*M_PI/tessellation)))/s2, (r_T-(r_T*(glm::cos(i*M_PI/tessellation))))/s2, 0.0/s2, 1.0);
+    tri_idx_track2++;
+    v_positionstrack2[tri_idx_track2] = track_p[5]+ glm::vec4((R_T*(glm::sin(i*M_PI/tessellation)))/s2, (R_T-(R_T*(glm::cos(i*M_PI/tessellation))))/s2, 0.0/s2, 1.0);
+    tri_idx_track2++;
+    v_positionstrack2[tri_idx_track2] = track_p[4]+ glm::vec4((r_T*(glm::sin((i+1)*M_PI/tessellation)))/s2, (r_T-(r_T*(glm::cos((i+1)*M_PI/tessellation))))/s2, 0.0/s2, 1.0);
+    tri_idx_track2++;
+    v_positionstrack2[tri_idx_track2] = track_p[5]+ glm::vec4((R_T*(glm::sin(i*M_PI/tessellation)))/s2, (R_T-(R_T*(glm::cos(i*M_PI/tessellation))))/s2, 0.0/s2, 1.0);
+    tri_idx_track2++;
+    v_positionstrack2[tri_idx_track2] = track_p[4]+ glm::vec4((r_T*(glm::sin((i+1)*M_PI/tessellation)))/s2, (r_T-(r_T*(glm::cos((i+1)*M_PI/tessellation))))/s2, 0.0/s2, 1.0);
+    tri_idx_track2++;
+    v_positionstrack2[tri_idx_track2] = track_p[5]+ glm::vec4((R_T*(glm::sin((i+1)*M_PI/tessellation)))/s2, (R_T-(R_T*(glm::cos((i+1)*M_PI/tessellation))))/s2, 0.0/s2, 1.0);
+    tri_idx_track2++;
+  }
+}
+
 
 // generate 12 triangles: 36 vertices and 36 colors
 void initcolors(void){
   fill_color();
+  fill_color_t();
 }
 
 void draw_bike(void)
@@ -546,11 +619,14 @@ void initBuffersGL(void)
   draw_bike();
   draw_man();
   draw_tyre();
+  draw_track_f();
+  draw_track_c();
 
   //note that the buffers are initialized in the respective constructors
 
   
   engine = new csX75::HNode(NULL,num_vertices,v_positionsengine,v_colors_green,sizeof(v_positionsengine),sizeof(v_colors_green));
+  engine->change_parameters(0.0/s2,0.0/s,0.0/s,0.0,0.0,2.0);
   body = new csX75::HNode(engine,num_vertices,v_positionsbody,v_colors_yellow,sizeof(v_positionsbody),sizeof(v_colors_yellow));
   body->change_parameters(0.0/s2,0.0/s,0.0/s,0.0,0.0,0.0);
   handle = new csX75::HNode(body,num_vertices,v_positionshandle,v_colors_brown,sizeof(v_positionshandle),sizeof(v_colors_brown));
@@ -593,7 +669,7 @@ void initBuffersGL(void)
 torso = new csX75::HNode(engine,num_vertices,v_positionstorsopu,v_colors_blue,sizeof(v_positionstorsopu),sizeof(v_colors_blue));
 torso->change_parameters(0.0/s,3.75/s,0/s,0.0,90,0);
 torsou = new csX75::HNode(torso,num_vertices,v_positionstorsop,v_colors_red,sizeof(v_positionstorsop),sizeof(v_colors_red));
-torsou->change_parameters(0.0/s2,-0/s,0.0/s,25,0,0.0);
+torsou->change_parameters(0.0/s2,0.0/s,0.0/s,25.0,0.0,0.0);
 neck = new csX75::HNode(torsou,num_vertices,v_positionsneck,v_colors_skin,sizeof(v_positionsneck),sizeof(v_colors_skin));
 neck->change_parameters(0.0/s2,3/s,0.0/s,-10,0.0,90);
 head = new csX75::HNode(neck,num_vertices,v_positionshead,v_colors_skin,sizeof(v_positionshead),sizeof(v_colors_skin));
@@ -621,17 +697,18 @@ rthigh->change_parameters(-0.5/s,-1/s,0.0/s,-20,0.0,-100);
 rleg = new csX75::HNode(rthigh,num_vertices,v_positionshands,v_colors_skin,sizeof(v_positionshands),sizeof(v_colors_skin));
 rleg->change_parameters(2/s,0.0/s,0.0/s,0,50,10);
 
-  root_node = engine;
-  curr_node = engine;
-  curr_pair = NULL;
+track1 = new csX75::HNode(NULL,num_vertices_t,v_positionstrack,v_colors_black_t,sizeof(v_positionstrack),sizeof(v_colors_black_t));
+track1->change_parameters(-12.0/s2,-8.45/s2,0.0/s2,-90.0,0.0,0.0);
+track2 = new csX75::HNode(track1,num_vertices_t,v_positionstrack,v_colors_black_t,sizeof(v_positionstrack),sizeof(v_colors_black_t));
+track2->change_parameters(0.0/s2,70.0/s2,0.0/s2,0.0,0.0,0.0);
+track3 = new csX75::HNode(track1,num_vertices_t,v_positionstrack2,v_colors_black_t,sizeof(v_positionstrack2),sizeof(v_colors_black_t));
+track3->change_parameters(0.0/s2,35.0/s2,0.0/s2,0.0,180.0,0.0);
+track4 = new csX75::HNode(track2,num_vertices_t,v_positionstrack2,v_colors_black_t,sizeof(v_positionstrack2),sizeof(v_colors_black_t));
+track4->change_parameters(75.0/s2,-35.0/s2,0.0/s2,0.0,0.0,0.0);
 
-  // glGenBuffers(1, &vbo);
-  // glGenVertexArrays(1, &vao);
-  // glBufferData (GL_ARRAY_BUFFER, sizeof(body_p),  body_p, GL_STATIC_DRAW);
-
-  // glEnableVertexAttribArray(0);
-  // glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-  // glBindVertexArray(0);
+// root_node = engine;
+// curr_node = engine;
+// curr_pair = NULL;
 }
 
 void renderGL(void)
@@ -647,7 +724,7 @@ void renderGL(void)
 
   translation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x_trans,y_trans,z_trans));
   
-  glm::vec4 cam = (body_p[0]+body_p[1]+body_p[2]+body_p[3]+body_p[4]+body_p[5]+body_p[6]+body_p[7])/8.0f;
+  glm::vec4 cam = ((body_p[0]+body_p[1]+body_p[2]+body_p[3]+body_p[4]+body_p[5]+body_p[6]+body_p[7])/8.0f)*translation_matrix;
 
 
   glm::vec4 c_pos = glm::vec4(c_xpos,c_ypos,c_zpos, 1.0)*c_rotation_matrix;
@@ -660,7 +737,7 @@ void renderGL(void)
   lookat_matrix = glm::lookAt(glm::vec3(c_pos),glm::vec3(0.0),glm::vec3(c_up));
   }
   else if(c==1){
-  lookat_matrix = glm::lookAt(glm::vec3(cam[0]-1, cam[1], cam[2]),glm::vec3(cam),glm::vec3(c_up));
+  lookat_matrix = glm::lookAt(glm::vec3(cam[0]-2, cam[1]+0.5, cam[2]),glm::vec3(cam),glm::vec3(c_up_x,c_up_y,c_up_z));
   }
 
   //creating the projection matrix
@@ -668,7 +745,7 @@ void renderGL(void)
     projection_matrix = glm::frustum(-1.0, 1.0, -1.0, 1.0, 0.5, 1.0);
     //projection_matrix = glm::perspective(glm::radians(90.0),1.0,0.1,5.0);
   else
-    projection_matrix = glm::ortho(-7.0, 7.0, -7.0, 7.0, -5.0, 5.0);
+    projection_matrix = glm::ortho(-5.0, 5.0, -5.0, 5.0, -10.0, 10.0);
 
   scale_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale_factor,scale_factor,scale_factor));
 
@@ -678,9 +755,13 @@ void renderGL(void)
 
   engine->render_tree();
 
-  // glBindVertexArray(vao);
-  // glDrawArrays(GL_TRIANGLES, 0, 36);
-  // glBindVertexArray(0);
+  translation_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(x_trans_t,y_trans_t,z_trans_t));
+  view_matrix = scale_matrix*projection_matrix*lookat_matrix*translation_matrix;
+  matrixStack.pop_back();
+  matrixStack.push_back(view_matrix);
+
+  track1->render_tree();
+
 
 }
 

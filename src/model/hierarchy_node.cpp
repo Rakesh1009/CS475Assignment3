@@ -89,7 +89,7 @@ namespace csX75
 
 		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(*ms_mult));
 		glBindVertexArray (vao);
-		glDrawArrays(GL_TRIANGLES, 0, num_vertices);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
 
 		// for memory 
 		delete ms_mult;
@@ -109,6 +109,7 @@ namespace csX75
 		matrixStack.pop_back();
 
 	}
+	
 
 	void HNode::inc_rx(){
 		rx++;
